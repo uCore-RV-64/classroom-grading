@@ -1,14 +1,14 @@
 {
-    "org": "LearningOS",
+    "org": "uCore-RV-64",
     "classrooms": [
         {
             "name": "2022 Training Comp on Open Source OS",
-            "assignments": ["lab0-1-run-os2", "lab1-os3", "lab2-os4"],
+            "assignments": ["base"],
             "studentBlacklist": ["july-12"]
         }
     ],
     "website": {
-        "title": "2022开源操作系统训练营排行榜"
+        "title": "uCore-RV-64"
     }
 }
 
