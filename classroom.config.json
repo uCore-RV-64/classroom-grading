@@ -3,7 +3,7 @@
     "classrooms": [
         {
             "name": "2022 Training Comp on Open Source OS",
-            "assignments": ["base-test"],
+            "assignments": ["ucore-rv-64"],
             "studentBlacklist": ["july-12"]
         }
     ],
