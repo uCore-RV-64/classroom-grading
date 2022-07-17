@@ -1,6 +1,6 @@
 ### 介绍
 
-#### 该项目可用于快速部署一个 classroom 排行榜网站
+#### 该项目可用于快速部署一个 classroom 排行榜网站.
 
 其是根据 [Github Classroom](https://classroom.github.com/) 里同学们的提交记录，结合 [github pages](https://pages.github.com/) 来生成一个排行网站，可以查看当前每一个作业的完成情况，搜索到自己和其他学生的排名，方便大家更快的了解到课堂的整体进度，提高同学们的参与度，督促自己的成长和进步。
 
