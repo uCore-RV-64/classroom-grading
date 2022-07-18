@@ -2,7 +2,7 @@
     "org": "uCore-RV-64",
     "classrooms": [
         {
-            "name": "2022 Training Comp on Open Source OS",
+            "name": "108561677-ucore-rv-64-classroom",
             "assignments": ["ucore-rv-64"],
             "studentBlacklist": ["july-12"]
         }
