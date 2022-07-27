@@ -1,37 +1,65 @@
 import React, { useState } from 'react'
 import { Tree } from 'antd'
+import { isEmpty, map, pick, find } from 'lodash'
 import type { DataNode, DirectoryTreeProps } from 'antd/lib/tree'
 import RankList from './rank'
 import ClassRankList from './classRank'
-import { TAssignment, TClassroom } from './types'
+import { TAssignment, TClassroom, IWorkflowInfo, TStudentHomework } from './types'
 import data from '../../data.json'
 import MobileNav from './mobileNav'
 import Icon from '../Icon'
 
-
 import './index.less'
 
 const { DirectoryTree } = Tree
+export const connector = '~@~'
 
 // @ts-ignore
 const classroomData = data.classrooms as TClassroom[]
 const latestUpdatedAt = data.latest_updated_at
+<<<<<<< HEAD
+=======
+const apiUseCount = data.apiUseCount
+>>>>>>> 3485fe87e8eb950121835e503f08d8c3734fffae
 
 const findClassroom = (key: string): TClassroom | undefined => {
   return classroomData.find(({ id }) => id === key)
 }
 
 const findAssignment = (key: string): TAssignment | undefined => {
-  const idx = classroomData.findIndex((item) =>
-    item.assignments.some((assignment) => assignment.id === key)
-  )
-  if (idx > -1) {
-    return classroomData[idx].assignments.find((assignment) => assignment.id === key)
+  const [assigmentId, branch] = key.split(connector)
+  let asssignmentIdx: number = -1
+  const classroomIdx = classroomData.findIndex((item) => {
+    const idx = item.assignments.findIndex((assignment) => assignment.id === assigmentId)
+    const findIdx = idx > -1
+    if (findIdx) {
+      asssignmentIdx = idx
+    }
+    return findIdx
+  })
+  if (classroomIdx > -1 && asssignmentIdx > -1) {
+    const assigment = classroomData[classroomIdx].assignments[asssignmentIdx]
+    if (branch) {
+      const { student_repositories } = assigment
+      const student_branch_repositories: TStudentHomework[] = map(
+        student_repositories,
+        (repository) => {
+          const currentBranchInfo: Partial<IWorkflowInfo> =
+            find(repository.branches, (br) => br.branchName === branch) || {}
+          return {
+            ...pick(repository, ['name', 'avatar', 'studentInfo', 'repoURL', 'languages']),
+            ...currentBranchInfo
+          }
+        }
+      )
+      return { ...assigment, student_repositories: student_branch_repositories }
+    }
+    return assigment
   }
 }
 
 // const defaultSelectedAssignment = classRoom[0].assignments[0].id
-const defaultSelectedClass =classroomData?.[0]?.id
+const defaultSelectedClass = classroomData?.[0]?.id
 const Rank = ({ isMobile }: { isMobile?: boolean }) => {
   const navRef = React.useRef<{ changeVisible: (visible: boolean) => void }>()
   const [hideNav, setHideNav] = useState(true)
@@ -40,11 +68,21 @@ const Rank = ({ isMobile }: { isMobile?: boolean }) => {
       title: item.title,
       key: item.id,
       isClass: true,
+      icon: <Icon symbol="icon-autozuoye1" />,
       children: item.assignments.map((assignment) => {
         return {
           title: assignment.title,
           key: assignment.id,
-          isLeaf: true
+          icon: <Icon symbol="icon-autowj-rz" />,
+          isLeaf: isEmpty(assignment.branches),
+          children: map(assignment.branches, (br) => {
+            return {
+              title: br,
+              key: `${assignment.id}${connector}${br}`,
+              icon: <Icon symbol="icon-autobranches" />,
+              isLeaf: true
+            }
+          })
         }
       })
     }
@@ -94,9 +132,22 @@ const Rank = ({ isMobile }: { isMobile?: boolean }) => {
       )}
       <main className="rank-list">
         {isClassNode ? (
+<<<<<<< HEAD
           <ClassRankList isMobile={isMobile} latestUpdatedAt={latestUpdatedAt} classroom={findClassroom(treeNodeId)} />
+=======
+          <ClassRankList
+            isMobile={isMobile}
+            latestUpdatedAt={latestUpdatedAt}
+            apiUseCount={apiUseCount}
+            classroom={findClassroom(treeNodeId)}
+          />
+>>>>>>> 3485fe87e8eb950121835e503f08d8c3734fffae
         ) : (
-          <RankList isMobile={isMobile} assignment={findAssignment(treeNodeId)} />
+          <RankList
+            isMobile={isMobile}
+            assignment={findAssignment(treeNodeId)}
+            treeNodeId={treeNodeId}
+          />
         )}
       </main>
     </div>

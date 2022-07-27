@@ -12,9 +12,13 @@
 
 注意在 fork 时，需要将 **Owner** 设置为 classroom 所在的组织下。
 
-<img src="https://user-images.githubusercontent.com/108247373/179374180-2c4ae639-3295-409d-8fcc-610bd018bacb.png" alt="fork" width="400"/>
+<img src="https://user-images.githubusercontent.com/920487/179538395-b8df34ad-5bb5-4ffb-88e5-394f39121068.png" alt="fork" width="400"/>
 
-#### 2. 添加 AUTH_TOKEN
+#### 2. 添加环境变量
+
+由于 action 在部署执行过程中会获取作业的最新数据，而更新的方式需要调用 [Github API](https://docs.github.com/cn/rest) 和 [classroom](https://classroom.github.com/classrooms) 的相关接口，因此需要配置以下两个变量获取访问接口的权限。
+
+##### 设置 AUTH_TOKEN
 
 a. 首先获取组织中任意 **Owner** 成员的 **Personal access tokens** ([详细参考](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token))
 
@@ -23,6 +27,12 @@ a. 首先获取组织中任意 **Owner** 成员的 **Personal access tokens** ([
 b. 回到项目 setting 中， 把上一步获取的 **Personal access tokens** 配置给 action 的环境变量 **AUTH_TOKEN**
 
 <img src="https://user-images.githubusercontent.com/920487/179375600-8fc6102f-b7d0-40a2-a7d1-df026bbc290c.png" alt="pat" width="400"/>
+
+##### 设置 SESSION_TOKEN
+
+该变量的值是取登录到 classroom.github.com 网站中的 cookie.\_github_classroom_session 字段
+
+<img src="https://user-images.githubusercontent.com/920487/179450068-c620e185-583f-4f83-a372-ee2c2825b805.png" alt="pat" width="400"/>
 
 #### 3 打开 workflow 开关
 
@@ -42,35 +52,35 @@ b. 回到项目 setting 中， 把上一步获取的 **Personal access tokens** 
 
 将 fork 的项目 clone 到本地，修改 **classroom.config.json**
 
-注意配置字段中 **org** 和 **assignments** 是重要字段，决定数据采集的准确性, 必须与实际信息保证一致。
+注意配置字段中 **org** 和 **classrooms** 是重要字段，决定数据采集的准确性，必须与实际信息保证一致。
 
-<img src="https://user-images.githubusercontent.com/108247373/179375014-8f81bc75-d49e-41fe-ae53-be5c8e483e84.png" alt="config" width="400"/>
+<img src="https://user-images.githubusercontent.com/108247373/179552983-c3807fbf-bcbf-4a24-9bf6-9116d6ca8137.png" alt="config" width="400"/>
 
-#### 字段
+完整的 classroom 名称:
+
+<img src="https://user-images.githubusercontent.com/108247373/179397657-f8bbc0cf-958a-4edb-bf98-477591de013f.png" alt="config" width="200"/>
+
+#### 配置字段说明
 
 | 字段       |        描述        | 是否必填 |
 | ---------- | :----------------: | -------: |
 | org        | classroom 所在组织 |       是 |
-| classrooms |        教室        |       否 |
+| classrooms |        教室        |       是 |
 | website    |     站点元信息     |       否 |
 
 #### classrooms 内部字段
 
 | 字段             |                           描述                            | 是否必填 |
 | ---------------- | :-------------------------------------------------------: | -------: |
-| name             | 必须与实际信息一致, 注意要求完整名称，包括 id，看下图说明 |       是 |
-| assignments      |         需要展示的作业排行榜, 必须与实际信息一致          |       是 |
-| studentBlacklist |            黑明单，用于过滤不参加排名的的学生             |       否 |
-
-完整的 classroom 名称:
-
-<img src="https://user-images.githubusercontent.com/108247373/179397657-f8bbc0cf-958a-4edb-bf98-477591de013f.png" alt="config" width="200"/>
+| name             | 必须与实际信息一致，注意要求完整名称，包括 id，看下图说明 |       是 |
+| assignments      |         需要展示的作业排行榜，必须与实际信息一致          |       是 |
+| studentBlacklist |            黑名单，用于过滤不参加排名的的学生             |       否 |
 
 #### website 内部字段
 
 | 字段  |        描述        | 是否必填 |
 | ----- | :----------------: | -------: |
 | title |  网站 logo 处名称  |       否 |
-| ...   | 根据需要可后期开放 |        - |
+| ...   | 根据需要可后期开放其他字段 |        - |
 
-修改完成后 push 到 main 分支, 会自动触发执行 action，等待几分钟后，便可以访问自己的排行榜页面了
+修改完成后 push 到 main 分支，会自动触发执行 action，等待几分钟后，便可以访问自己的排行榜页面了。

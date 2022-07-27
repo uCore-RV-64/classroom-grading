@@ -3,10 +3,11 @@ import { Table, Tag, Button, Progress } from 'antd'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import type { ColumnsType } from 'antd/lib/table'
-import { orderBy } from 'lodash'
+import { orderBy, first, last } from 'lodash'
 import Icon from '../../components/Icon'
 import type { TAssignment, TStudentHomework } from './types'
 import Search, { ISearchProps } from './search'
+import { connector } from '.'
 
 // const languageColorArra = [
 //   'red',
@@ -23,13 +24,21 @@ import Search, { ISearchProps } from './search'
 
 dayjs.extend(relativeTime)
 
+const sortBoolean = (key: keyof TStudentHomework) => {
+  return (a: TStudentHomework) => a[key] ? -1 : 1
+}
+
 interface IRankListProps {
   assignment?: TAssignment
   isMobile?: boolean
+  treeNodeId: string
 }
 
 const RankList = (props: IRankListProps) => {
   const [query, setQuery] = useState<Partial<ISearchProps>>({})
+  const { treeNodeId } = props
+
+  const [_assignmentId, branch] = treeNodeId.split(connector)
 
   const columns: ColumnsType<TStudentHomework> = useMemo(
     () => [
@@ -55,7 +64,7 @@ const RankList = (props: IRankListProps) => {
             default:
               break
           }
-          return <span className="rank-modal">{content}</span>
+          return <span className="rank-modal">{content || '-'}</span>
         }
       },
       {
@@ -87,7 +96,10 @@ const RankList = (props: IRankListProps) => {
         width: 100,
         dataIndex: 'points_awarded',
         className: 'top-three',
-        key: 'score'
+        key: 'score',
+        render(text, record: TStudentHomework) {
+          return record.hasSubmited ? text : '-'
+        }
       },
       {
         title: '状态',
@@ -96,9 +108,13 @@ const RankList = (props: IRankListProps) => {
         dataIndex: 'points_available',
         key: 'points_available',
         render(_text: string, record: TStudentHomework) {
-          const passed =
-            Number(record.points_awarded) > 0 && record.points_awarded === record.points_available
-          return <Tag color={passed ? 'green' : 'red'}>{passed ? '成功' : '失败'}</Tag>
+          if (record.hasSubmited) {
+            const passed =
+              Number(record.points_awarded) > 0 && record.points_awarded === record.points_available
+            return <Tag color={passed ? 'green' : 'red'}>{passed ? '成功' : '失败'}</Tag>
+          } else {
+            return '-'
+          }
         }
       },
       {
@@ -108,12 +124,20 @@ const RankList = (props: IRankListProps) => {
         dataIndex: 'commits',
         key: 'commits',
         render(_text: any, record: TStudentHomework) {
-          return record.commits.length > 0 ? (
+          if (!record.hasSubmited) {
+            return '-'
+          }
+          const count = record.commitCount
+          return count !== undefined ? (
             <Button
               type="link"
-              onClick={() => window.open(`${record.repoURL}/commits`)}
+              onClick={() => {
+                branch
+                  ? window.open(`${record.repoURL}/commits/${branch}`)
+                  : window.open(`${record.repoURL}/commits`)
+              }}
             >
-              {record.commits.length} {record.commits.length > 1 ? 'commits' : 'commit'}
+              {count} {count > 1 ? 'commits' : 'commit'}
             </Button>
           ) : (
             '-'
@@ -126,61 +150,42 @@ const RankList = (props: IRankListProps) => {
         width: 100,
         dataIndex: 'executeTime',
         key: 'executeTime',
-        render(text: string) {
+        render(text: string, record: TStudentHomework) {
+          if (!record.hasSubmited) {
+            return '-'
+          }
           if (text) {
             return `${text}s`
           }
           return '-'
         }
       },
-      // {
-      //   title: '语言',
-      //   align: 'center',
-      //   dataIndex: 'languages',
-      //   key: 'languages',
-      //   render(_text: string[]) {
-      //     return (
-      //       <Tag
-      //         style={{ height: 18, display: 'inline-flex', alignItems: 'center' }}
-      //         color={languageColorArra[0]}
-      //       >
-      //         {_text?.[0]}
-      //       </Tag>
-      //     )
-      //     // return text?.slice(0, 3).map((l, index) => (
-      //     //   <Tag
-      //     //     style={{ height: 18, lineHeight: '18px' }}
-      //     //     color={languageColorArra[index]}
-      //     //     key={l}
-      //     //   >
-      //     //     {l}
-      //     //   </Tag>
-      //     // ))
-      //   }
-      // },
       {
-        title: '提交时间',
+        title: '更新时间',
         align: 'center',
         width: 150,
-        dataIndex: 'submission_timestamp',
-        key: 'submission_timestamp',
-        render(text) {
-          return text ? dayjs(text.replace(/\s|UTC/g, '')).fromNow() : '-'
+        dataIndex: 'latestUpdatedAt',
+        key: 'latestUpdatedAt',
+        render(text, record) {
+          if (!record.hasSubmited) {
+            return '-'
+          }
+          return text ? dayjs(text).fromNow() : '-'
         }
       },
-      // {
-      //   title: '更新时间',
-      //   align: 'center',
-      //   dataIndex: 'update_at',
-      //   key: 'update_at',
-      //   render(_text: never, record: TStudentHomework) {
-      //     const latestRun = record.runs[0]
-      //     if (latestRun && latestRun.run_started_at) {
-      //       return dayjs(latestRun.run_started_at).fromNow()
-      //     }
-      //     return '-'
-      //   }
-      // },
+      {
+        title: '第一次提交时间',
+        align: 'center',
+        width: 150,
+        dataIndex: 'firstSubmitedAt',
+        key: 'firstSubmitedAt',
+        render(text, record) {
+          if (!record.hasSubmited) {
+            return '-'
+          }
+          return text ? dayjs(text).fromNow() : '-'
+        }
+      },
       {
         title: 'Action',
         align: 'center',
@@ -188,7 +193,10 @@ const RankList = (props: IRankListProps) => {
         width: 100,
         key: 'actions',
         render(_text: never, record: TStudentHomework) {
-          const url = record.latestRunJobs?.[0]?.html_url
+          if (!record.hasSubmited) {
+            return '-'
+          }
+          const url = record.autoGradingJob?.html_url
           if (url) {
             return (
               <Icon
@@ -200,41 +208,58 @@ const RankList = (props: IRankListProps) => {
           }
           return '-'
         }
+      },
+      {
+        title: '仓库',
+        align: 'center',
+        width: 100,
+        dataIndex: 'operate',
+        key: 'operate',
+        render(_text: any, record: TStudentHomework) {
+          if (!record.hasSubmited) {
+            return '-'
+          }
+          return (
+            <Icon
+              style={{ cursor: 'pointer' }}
+              symbol="icon-autogithub"
+              onClick={() => {
+                branch
+                  ? window.open(`${record.repoURL}/tree/${branch}`)
+                  : window.open(record.repoURL)
+              }}
+            />
+          )
+        }
       }
-      // {
-      //   title: '仓库',
-      //   align: 'center',
-      //   width: 100,
-      //   dataIndex: 'operate',
-      //   key: 'operate',
-      //   render(_text: any, record: TStudentHomework) {
-      //     return (
-      //       <Icon
-      //         style={{ cursor: 'pointer' }}
-      //         symbol="icon-autogithub"
-      //         onClick={() => window.open(record.repoURL)}
-      //       />
-      //     )
-      //   }
-      // }
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [props.assignment?.id]
+    [treeNodeId]
   )
 
-  const assignmentId = props.assignment?.id
+  // const branchName = props.assignment?.branchName
   let dataSource: TStudentHomework[] = useMemo(
-    () =>
-      orderBy(
+    () => {
+      let currentRank = 1
+      return orderBy(
         props.assignment?.student_repositories,
-        ['points_awarded', 'submission_timestamp'],
-        ['desc', 'asc']
-      ).map((item, index) => ({
-        ...item,
-        rank: index + 1
-      })),
+        [sortBoolean('hasSubmited'), sortBoolean('isSuccess'), 'firstSubmitedAt'],
+        ['asc', 'asc', 'asc']
+      ).map((item) => {
+        let rank
+        if (item.hasSubmited) {
+          rank = currentRank
+          currentRank += 1
+        }
+        return {
+          ...item,
+          rank
+        }
+      })
+    },
+
     // eslint-disable-next-line
-    [assignmentId]
+    [treeNodeId]
   )
   dataSource = dataSource.filter((item: TStudentHomework) => {
     let searchName = true
@@ -307,9 +332,16 @@ const RankList = (props: IRankListProps) => {
       return <span className={passed ? 'green' : 'red'}>{passed ? '成功' : '失败'}</span>
     }
     const renderCommits = (record: TStudentHomework) => {
-      return record.commits.length > 0 ? (
-        <span onClick={() => window.open(`${record.repoURL}/commits`)}>
-          {record.commits.length} {record.commits.length > 1 ? 'commits' : 'commit'}
+      const count = record.commitCount
+      return count !== undefined ? (
+        <span
+          onClick={() => {
+            branch
+              ? window.open(`${record.repoURL}/commits/${branch}`)
+              : window.open(`${record.repoURL}/commits`)
+          }}
+        >
+          {count} {count > 1 ? 'commits' : 'commit'}
         </span>
       ) : (
         '-'
@@ -325,7 +357,7 @@ const RankList = (props: IRankListProps) => {
     }
 
     const renderAction = (record: TStudentHomework) => {
-      const url = record.latestRunJobs?.[0]?.html_url
+      const url = record.autoGradingJob?.html_url
       if (url) {
         return (
           <Icon
@@ -360,14 +392,20 @@ const RankList = (props: IRankListProps) => {
               </span>
               <div className="rank-info rank-info-more">
                 <span className="rank-info-name">{item.name}</span>
-                <span className="rank-info-status">{renderStatus(item)}</span>
+                <span className="rank-info-status">
+                  {item.hasSubmited ? renderStatus(item) : '-'}
+                </span>
                 <span className="rank-info-detail">
-                  <span className="commits">{renderCommits(item)}</span>
-                  <span className="executeSpend-time">{renderExecuteSpendTime(item)}</span>
-                  <span className="submission-time">{renderSubmission(item)}</span>
+                  <span className="commits">{item.hasSubmited ? renderCommits(item) : '-'}</span>
+                  <span className="executeSpend-time">
+                    {item.hasSubmited ? renderExecuteSpendTime(item) : '-'}
+                  </span>
+                  <span className="submission-time">
+                    {item.hasSubmited ? renderSubmission(item) : ''}
+                  </span>
                 </span>
               </div>
-              <span className="rank-action">{renderAction(item)}</span>
+              <span className="rank-action">{item.hasSubmited ? renderAction(item) : '-'}</span>
               <span
                 className={`rank-score ${
                   item.points_awarded === '100' ? 'rank-score-success' : ''
@@ -383,7 +421,7 @@ const RankList = (props: IRankListProps) => {
   }
   return (
     <>
-      <div className='classrank-header'>
+      <div className="classrank-header">
         <Search
           isMobile={props.isMobile}
           defaultQuery={query}
