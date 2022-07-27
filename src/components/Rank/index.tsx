@@ -17,10 +17,7 @@ export const connector = '~@~'
 // @ts-ignore
 const classroomData = data.classrooms as TClassroom[]
 const latestUpdatedAt = data.latest_updated_at
-<<<<<<< HEAD
-=======
 const apiUseCount = data.apiUseCount
->>>>>>> 3485fe87e8eb950121835e503f08d8c3734fffae
 
 const findClassroom = (key: string): TClassroom | undefined => {
   return classroomData.find(({ id }) => id === key)
@@ -132,16 +129,12 @@ const Rank = ({ isMobile }: { isMobile?: boolean }) => {
       )}
       <main className="rank-list">
         {isClassNode ? (
-<<<<<<< HEAD
-          <ClassRankList isMobile={isMobile} latestUpdatedAt={latestUpdatedAt} classroom={findClassroom(treeNodeId)} />
-=======
           <ClassRankList
             isMobile={isMobile}
             latestUpdatedAt={latestUpdatedAt}
             apiUseCount={apiUseCount}
             classroom={findClassroom(treeNodeId)}
           />
->>>>>>> 3485fe87e8eb950121835e503f08d8c3734fffae
         ) : (
           <RankList
             isMobile={isMobile}
