@@ -74,11 +74,10 @@ const RankList = (props: IRankListProps) => {
         fixed: true,
         width: 120,
         dataIndex: 'name',
-        className: 'top-three',
         render(text: string, record: TStudentHomework) {
           return (
             <span
-              className="link student-info"
+              className={`link student-info ${record.rank && record.rank < 4 ? 'top-three' : '' }`}
               onClick={() => window.open(`https://github.com/${text}`)}
             >
               {record.studentInfo.avatar_url && (
@@ -96,14 +95,13 @@ const RankList = (props: IRankListProps) => {
         align: 'center',
         width: 100,
         dataIndex: 'points_awarded',
-        className: 'top-three',
         key: 'score',
         render(text, record: TStudentHomework) {
-          return record.hasSubmited ? text : '-'
+          return record.hasSubmited ? <span className={`${record.rank && record.rank < 4 ? 'top-three' : ''}`}> {text} </span> : '-'
         }
       },
       {
-        title: '状态',
+        title: '最新提交状态',
         align: 'center',
         width: 100,
         dataIndex: 'points_available',
@@ -175,7 +173,7 @@ const RankList = (props: IRankListProps) => {
         }
       },
       {
-        title: '第一次成功时间',
+        title: '首次成功时间',
         align: 'center',
         width: 150,
         dataIndex: 'firstSuccessAt',
@@ -191,7 +189,7 @@ const RankList = (props: IRankListProps) => {
         title: 'Action',
         align: 'center',
         dataIndex: 'actions',
-        width: 100,
+        width: 80,
         key: 'actions',
         render(_text: never, record: TStudentHomework) {
           if (!record.hasSubmited) {
@@ -213,7 +211,7 @@ const RankList = (props: IRankListProps) => {
       {
         title: '仓库',
         align: 'center',
-        width: 100,
+        width: 50,
         dataIndex: 'operate',
         key: 'operate',
         render(_text: any, record: TStudentHomework) {
